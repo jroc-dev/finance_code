@@ -124,7 +124,6 @@ def get_top_n(prev_returns, top_n):
     top_stocks : DataFrame
         Top stocks for each ticker and date marked with a 1
     """
-    # TODO: Implement Function
     # print(prev_returns.head())
     res = pd.DataFrame(columns=prev_returns.columns)
 
@@ -145,3 +144,92 @@ def get_top_n(prev_returns, top_n):
 
 
 project_tests.test_get_top_n(get_top_n)
+
+top_bottom_n = 50
+df_long = get_top_n(prev_returns, top_bottom_n)
+df_short = get_top_n(-1*prev_returns, top_bottom_n)
+project_helper.print_top(df_long, 'Longed Stocks')
+project_helper.print_top(df_short, 'Shorted Stocks')
+
+
+def portfolio_returns(df_long, df_short, lookahead_returns, n_stocks):
+    """
+    Compute expected returns for the portfolio, assuming equal investment in each long/short stock.
+
+    Parameters
+    ----------
+    df_long : DataFrame
+        Top stocks for each ticker and date marked with a 1
+    df_short : DataFrame
+        Bottom stocks for each ticker and date marked with a 1
+    lookahead_returns : DataFrame
+        Lookahead returns for each ticker and date
+    n_stocks: int
+        The number number of stocks chosen for each month
+
+    Returns
+    -------
+    portfolio_returns : DataFrame
+        Expected portfolio returns for each ticker and date
+    """
+    # TODO: Implement Function
+    df_long2 = df_long * lookahead_returns
+    df_short2 = df_short * lookahead_returns
+
+    ret = (df_long2 - df_short2)
+    ret_avg = ret / n_stocks
+
+    return ret_avg
+
+
+project_tests.test_portfolio_returns(portfolio_returns)
+
+expected_portfolio_returns = portfolio_returns(df_long, df_short, lookahead_returns, 2*top_bottom_n)
+project_helper.plot_returns(expected_portfolio_returns.T.sum(), 'Portfolio Returns')
+
+expected_portfolio_returns_by_date = expected_portfolio_returns.T.sum().dropna()
+portfolio_ret_mean = expected_portfolio_returns_by_date.mean()
+portfolio_ret_ste = expected_portfolio_returns_by_date.sem()
+portfolio_ret_annual_rate = (np.exp(portfolio_ret_mean * 12) - 1) * 100
+
+print("""
+Mean:                       {:.6f}
+Standard Error:             {:.6f}
+Annualized Rate of Return:  {:.2f}%
+""".format(portfolio_ret_mean, portfolio_ret_ste, portfolio_ret_annual_rate))
+
+
+def analyze_alpha(expected_portfolio_returns_by_date):
+    """
+    Perform a t-test with the null hypothesis being that the expected mean return is zero.
+
+    Parameters
+    ----------
+    expected_portfolio_returns_by_date : Pandas Series
+        Expected portfolio returns for each date
+
+    Returns
+    -------
+    t_value
+        T-statistic from t-test
+    p_value
+        Corresponding p-value
+    """
+    # TODO: Implement Function
+    expected_null_hypothesis = 0.0
+    x = expected_portfolio_returns_by_date
+    m, v, s, k = stats.t.stats(10, moments='mvsk')
+    t, p = stats.ttest_1samp(x, m)
+
+    return (t, p / 2)
+
+
+project_tests.test_analyze_alpha(analyze_alpha)
+
+t_value, p_value = analyze_alpha(expected_portfolio_returns_by_date)
+print("""
+Alpha analysis:
+ t-value:        {:.3f}
+ p-value:        {:.6f}
+""".format(t_value, p_value))
+

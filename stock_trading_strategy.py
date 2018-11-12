@@ -44,3 +44,29 @@ project_helper.plot_resampled_prices(
     monthly_close.loc[:, apple_ticker],
     close.loc[:, apple_ticker],
     '{} Stock - Close Vs Monthly Close'.format(apple_ticker))
+
+
+def compute_log_returns(prices):
+    """
+    Compute log returns for each ticker.
+
+    Parameters
+    ----------
+    prices : DataFrame
+        Prices for each ticker and date
+
+    Returns
+    -------
+    log_returns : DataFrame
+        Log returns for each ticker and date
+    """
+    returns = np.log(prices) - np.log(prices.shift(1))
+    return returns
+
+
+project_tests.test_compute_log_returns(compute_log_returns)
+
+monthly_close_returns = compute_log_returns(monthly_close)
+project_helper.plot_returns(
+    monthly_close_returns.loc[:, apple_ticker],
+    'Log Returns of {} Stock (Monthly)'.format(apple_ticker))
